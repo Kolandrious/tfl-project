@@ -7,8 +7,6 @@ import './App.css';
 // const APP_ID = 'b45e91a3';
 // const APP_KEY = '8f6cdc23bf6c563423ec0146b6a669e2';
 
-// ADD inbound & outbound toggle
-
 export default class App extends React.Component {
   constructor(props) {
     super(props);
@@ -16,32 +14,52 @@ export default class App extends React.Component {
     this.state = {
       data: {},
       path: [],
+      allRoutes: [],
       direction: 'inbound'
-    }
-    this.getBusRouteById = this.getBusRouteById.bind(this);
+    };
+    this.setBusRouteById = this.setBusRouteById.bind(this);
     this.changeDirection = this.changeDirection.bind(this);
-    this.getBusRouteById('2');
+    this.getAllBusRoutes = this.getAllBusRoutes.bind(this);
+    this.getAllBusRoutes();
+    this.setBusRouteById('2');
   }
 
-  getBusRouteById(id) {
+  getAllBusRoutes() {
+    axios({
+      method: 'get',
+      url: 'https://api.tfl.gov.uk/Line/Mode/bus/Route?serviceTypes=Regular',
+      responseType: 'json'
+    }).then(data => {
+      this.setState({ allRoutes: data.data });
+    });
+  }
+
+  setBusRouteById(id) {
     axios({
       method: 'get',
       url: `https://api-radon.tfl.gov.uk/Line/${id}/Route/Sequence/all?serviceTypes=Regular&excludeCrowding=true`,
-      responseType: 'json'
-    }).then((data) => {
-      data.data.lineStrings.forEach((el, index) => {
-        data.data.lineStrings[index] = JSON.parse(el)[0];
-      });
+      responseType: 'json',
+      transformResponse: [data => {
+        const newData = data;
+        newData.lineStrings.forEach((el, index) => {
+          newData.lineStrings[index] = JSON.parse(el)[0];
+        });
+        return newData;
+      }],
+    }).then(data => {
       console.log(data);
-      const path = this.state.direction === 'inbound' ? data.data.lineStrings[0] : data.data.lineStrings[1]
+      const path = this.state.direction === 'inbound' ?
+                   data.data.lineStrings[0] :
+                   data.data.lineStrings[1];
       this.setState({
         data: data.data,
-        path: path
+        path
       });
     });
   }
-  changeDirection(){
-    console.log(this.state.data);
+
+  changeDirection() {
+    // console.log(this.state.data);
     if (this.state.direction === 'inbound') {
       this.setState({
         direction: 'outbound',
@@ -58,9 +76,11 @@ export default class App extends React.Component {
   render() {
     return (
       <div>
-        <BusMap path={this.state.path}/>
-        <button onClick={() => this.changeDirection()}>change direction, current: {this.state.direction}</button>
-        <BusList />
+        <BusMap path={this.state.path} />
+        <button onClick={() => this.changeDirection()}>
+          change direction, current: {this.state.direction}
+        </button>
+        <BusList data={this.state.allRoutes} direction={this.state.direction} onBusClick={id => this.setBusRouteById(id)}/>
       </div>
     );
   }
