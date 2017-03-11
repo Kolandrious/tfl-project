@@ -2,6 +2,7 @@ import React from 'react';
 import axios from 'axios';
 import BusList from './BusList';
 import BusMap from './BusMap.js';
+import 'bootstrap/dist/css/bootstrap.css';
 import './App.css';
 
 // const APP_ID = 'b45e91a3';
@@ -77,7 +78,7 @@ export default class App extends React.Component {
     return (
       <div>
         <BusMap path={this.state.path} />
-        <button onClick={() => this.changeDirection()}>
+        <button className="btn btn-info btn-block" onClick={() => this.changeDirection()}>
           change direction, current: {this.state.direction}
         </button>
         <BusList data={this.state.allRoutes} direction={this.state.direction} onBusClick={id => this.setBusRouteById(id)}/>

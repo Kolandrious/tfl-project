@@ -1,4 +1,5 @@
 import React from 'react';
+import './App.css';
 
 export default ({ onBusClick, bus, direction }) => {
   if(!bus.routeSections[direction]) {

@@ -2,16 +2,19 @@
   "name": "LondonMap",
   "version": "0.1.0",
   "private": true,
+  "homepage": "http://kolandrious.github.io/tfl-project",
   "devDependencies": {
     "eslint-config-airbnb-base": "^11.1.1",
     "eslint-config-rallycoding": "^3.2.0",
     "eslint-plugin-import": "^2.2.0",
     "eslint-plugin-jsx-a11y": "^4.0.0",
     "eslint-plugin-react": "^6.10.0",
+    "gh-pages": "^0.12.0",
     "react-scripts": "0.9.3"
   },
   "dependencies": {
     "axios": "^0.15.3",
+    "bootstrap": "^3.3.7",
     "react": "^15.4.2",
     "react-dom": "^15.4.2",
     "react-google-maps": "^4.11.0"
@@ -20,6 +23,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   }
 }
