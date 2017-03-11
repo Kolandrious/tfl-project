@@ -78,7 +78,7 @@ export default class App extends React.Component {
     return (
       <div>
         <BusMap path={this.state.path} />
-        <button className="btn btn-info btn-block" onClick={() => this.changeDirection()}>
+        <button className="btn btn-block" onClick={() => this.changeDirection()}>
           change direction, current: {this.state.direction}
         </button>
         <BusList data={this.state.allRoutes} direction={this.state.direction} onBusClick={id => this.setBusRouteById(id)}/>
