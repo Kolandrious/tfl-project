@@ -12,10 +12,11 @@ export default class SearchBar extends React.Component{
 
   render() {
     return (
-      <div className="form-group">
+      <div className="input-group">
+        <span className="input-group-addon col-1">found {this.props.results}</span>
         <input
           type="text"
-          className="form-control"
+          className="form-control col-11"
           placeholder="Search!"
           value={this.state.term}
           onChange={event => {

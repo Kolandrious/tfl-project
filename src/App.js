@@ -125,7 +125,7 @@ export default class App extends React.Component {
 
   render() {
     return (
-      <div>
+      <div className="container">
         <BusMap path={this.state.selectedRoute} />
         <button
           className="btn btn-block"
@@ -134,7 +134,7 @@ export default class App extends React.Component {
           }}>
           change direction, current: {this.state.direction}
         </button>
-        <SearchBar search={term => {
+        <SearchBar results={this.state.filteredRoutes.length} search={term => {
           this.setState({
             filteredRoutes: this.search(term, this.state.allRoutes),
             term
