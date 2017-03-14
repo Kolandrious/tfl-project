@@ -2,13 +2,9 @@ import React from 'react';
 import BusData from './BusData';
 import './App.css';
 
-export default ({ data, direction, ...props }) => {
-  if (direction === 'inbound') {
-    direction = 0;
-  } else {
-    direction = 1;
-  }
 
+
+export default props => {
   return (
     <div >
       <table className="table table-condensed table-hover">
@@ -20,13 +16,12 @@ export default ({ data, direction, ...props }) => {
           </tr>
         </thead>
         <tbody>
-          {data.map(el => {
+          {props.data.map(el => {
             return (
               <BusData
                 key={el.id}
                 onBusClick={props.onBusClick}
                 bus={el}
-                direction={direction}
               />
             );
           })}

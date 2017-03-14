@@ -1,14 +1,7 @@
-#root {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
 .table.table-hover tbody tr:hover {
-  background-color: #dcedeb;
+  background-color: #dbfffb;
 }
 
 .btn.btn-block {
   background-color: #a0d6d1;
-  font-size: 20px;
 }

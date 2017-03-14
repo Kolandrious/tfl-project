@@ -1,7 +1,9 @@
 import React from 'react';
 import axios from 'axios';
+import _ from 'lodash';
 import BusList from './BusList';
-import BusMap from './BusMap.js';
+import BusMap from './BusMap';
+import SearchBar from './SearchBar';
 import 'bootstrap/dist/css/bootstrap.css';
 import './App.css';
 
@@ -13,14 +15,19 @@ export default class App extends React.Component {
     super(props);
 
     this.state = {
-      data: {},
-      path: [],
+      allData: {},
+      selectedData: {},
+      selectedRoute: [],
       allRoutes: [],
-      direction: 'inbound'
+      filteredRoutes: [],
+      term: '',
+      direction: 'inbound',
     };
     this.setBusRouteById = this.setBusRouteById.bind(this);
     this.changeDirection = this.changeDirection.bind(this);
     this.getAllBusRoutes = this.getAllBusRoutes.bind(this);
+    this.filterDataByDirection = this.filterDataByDirection.bind(this);
+    this.search = this.search.bind(this);
     this.getAllBusRoutes();
     this.setBusRouteById('2');
   }
@@ -31,8 +38,32 @@ export default class App extends React.Component {
       url: 'https://api.tfl.gov.uk/Line/Mode/bus/Route?serviceTypes=Regular',
       responseType: 'json'
     }).then(data => {
-      this.setState({ allRoutes: data.data });
+      this.setState({
+        allRoutes: this.filterDataByDirection(data.data, this.state.direction),
+        allData: data.data,
+        filteredRoutes: this.filterDataByDirection(data.data, this.state.direction)
+      });
     });
+  }
+
+  filterDataByDirection(data, direction) {
+    let newData = [];
+    data.forEach(el => {
+      let newEl = _.cloneDeep(el);
+      if (newEl.routeSections.some(section => {
+        return section.direction === direction
+      })) {
+        let newRouteSections = [];
+        newEl.routeSections.forEach(section => {
+          if (section.direction === direction) {
+            newRouteSections.push(section);
+          }
+        });
+      newEl.routeSections = newRouteSections;
+      newData.push(newEl);
+      }
+    })
+    return newData;
   }
 
   setBusRouteById(id) {
@@ -48,40 +79,68 @@ export default class App extends React.Component {
         return newData;
       }],
     }).then(data => {
-      console.log(data);
-      const path = this.state.direction === 'inbound' ?
+      const route = this.state.direction === 'inbound' ?
                    data.data.lineStrings[0] :
                    data.data.lineStrings[1];
       this.setState({
-        data: data.data,
-        path
+        selectedData: data.data,
+        selectedRoute: route
       });
     });
   }
 
   changeDirection() {
-    // console.log(this.state.data);
     if (this.state.direction === 'inbound') {
       this.setState({
         direction: 'outbound',
-        path: this.state.data.lineStrings[1]
+        selectedRoute: this.state.selectedData.lineStrings[1],
+        allRoutes: this.filterDataByDirection(this.state.allData, 'outbound'),
+        filteredRoutes: this.search(this.state.term, this.filterDataByDirection(this.state.allData, 'outbound'))
       });
     } else {
       this.setState({
         direction: 'inbound',
-        path: this.state.data.lineStrings[0]
+        selectedRoute: this.state.selectedData.lineStrings[0],
+        allRoutes: this.filterDataByDirection(this.state.allData, 'inbound'),
+        filteredRoutes: this.search(this.state.term, this.filterDataByDirection(this.state.allData, 'inbound'))
       });
     }
+  }
+
+  search(term, allRoutes) {
+    const filteredRoutes = [];
+    allRoutes.forEach((el, index) => {
+      if (el.name.toLowerCase().includes(term.toLowerCase())) {
+        filteredRoutes.push(el);
+      }
+      else if (el
+                 .routeSections[0]
+                 .name.toLowerCase()
+                 .includes(term.toLowerCase())) {
+        filteredRoutes.push(el);
+      }
+    });
+    return filteredRoutes;
   }
 
   render() {
     return (
       <div>
-        <BusMap path={this.state.path} />
-        <button className="btn btn-block" onClick={() => this.changeDirection()}>
+        <BusMap path={this.state.selectedRoute} />
+        <button
+          className="btn btn-block"
+          onClick={() => {
+            this.changeDirection();
+          }}>
           change direction, current: {this.state.direction}
         </button>
-        <BusList data={this.state.allRoutes} direction={this.state.direction} onBusClick={id => this.setBusRouteById(id)}/>
+        <SearchBar search={term => {
+          this.setState({
+            filteredRoutes: this.search(term, this.state.allRoutes),
+            term
+          });
+        }} />
+        <BusList data={this.state.filteredRoutes} onBusClick={id => this.setBusRouteById(id)}/>
       </div>
     );
   }
