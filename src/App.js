@@ -1,3 +1,5 @@
+// add selected route
+
 import React from 'react';
 import axios from 'axios';
 import _ from 'lodash';
@@ -16,12 +18,12 @@ export default class App extends React.Component {
 
     this.state = {
       allData: {},
-      selectedData: {},
-      selectedRoute: [],
       allRoutes: [],
       filteredRoutes: [],
-      term: '',
+      selectedData: {},
+      selectedRoute: [],
       direction: 'inbound',
+      searchTerm: '',
     };
     this.setBusRouteById = this.setBusRouteById.bind(this);
     this.changeDirection = this.changeDirection.bind(this);
@@ -90,33 +92,26 @@ export default class App extends React.Component {
   }
 
   changeDirection() {
-    if (this.state.direction === 'inbound') {
-      this.setState({
-        direction: 'outbound',
-        selectedRoute: this.state.selectedData.lineStrings[1],
-        allRoutes: this.filterDataByDirection(this.state.allData, 'outbound'),
-        filteredRoutes: this.search(this.state.term, this.filterDataByDirection(this.state.allData, 'outbound'))
-      });
-    } else {
-      this.setState({
-        direction: 'inbound',
-        selectedRoute: this.state.selectedData.lineStrings[0],
-        allRoutes: this.filterDataByDirection(this.state.allData, 'inbound'),
-        filteredRoutes: this.search(this.state.term, this.filterDataByDirection(this.state.allData, 'inbound'))
-      });
-    }
+    const direction = this.state.direction === 'inbound' ? 'outbound' : 'inbound';
+    const directionNumber = this.state.direction === 'inbound' ? 1 : 0;
+    this.setState({
+      direction,
+      selectedRoute: this.state.selectedData.lineStrings[directionNumber],
+      allRoutes: this.filterDataByDirection(this.state.allData, direction),
+      filteredRoutes: this.search(this.state.searchTerm, this.filterDataByDirection(this.state.allData, direction))
+    });
   }
 
-  search(term, allRoutes) {
+  search(searchTerm, allRoutes) {
     const filteredRoutes = [];
     allRoutes.forEach((el, index) => {
-      if (el.name.toLowerCase().includes(term.toLowerCase())) {
+      if (el.name.toLowerCase().includes(searchTerm.toLowerCase())) {
         filteredRoutes.push(el);
       }
       else if (el
                  .routeSections[0]
                  .name.toLowerCase()
-                 .includes(term.toLowerCase())) {
+                 .includes(searchTerm.toLowerCase())) {
         filteredRoutes.push(el);
       }
     });
@@ -125,7 +120,7 @@ export default class App extends React.Component {
 
   render() {
     return (
-      <div className="container">
+      <div className="container-fluid">
         <BusMap path={this.state.selectedRoute} />
         <button
           className="btn btn-block"
@@ -137,7 +132,7 @@ export default class App extends React.Component {
         <SearchBar results={this.state.filteredRoutes.length} search={term => {
           this.setState({
             filteredRoutes: this.search(term, this.state.allRoutes),
-            term
+            searchTerm: term
           });
         }} />
         <BusList data={this.state.filteredRoutes} onBusClick={id => this.setBusRouteById(id)}/>
