@@ -1,4 +1,4 @@
-// add selected route
+// add selected route info
 
 import React from 'react';
 import axios from 'axios';
@@ -92,30 +92,35 @@ export default class App extends React.Component {
   }
 
   changeDirection() {
-    const direction = this.state.direction === 'inbound' ? 'outbound' : 'inbound';
-    const directionNumber = this.state.direction === 'inbound' ? 1 : 0;
-    this.setState({
-      direction,
-      selectedRoute: this.state.selectedData.lineStrings[directionNumber],
-      allRoutes: this.filterDataByDirection(this.state.allData, direction),
-      filteredRoutes: this.search(this.state.searchTerm, this.filterDataByDirection(this.state.allData, direction))
+    this.setState((state, props) => {
+      const direction = state.direction === 'inbound' ? 'outbound' : 'inbound';
+      const directionNumber = state.direction === 'inbound' ? 1 : 0;
+      return {
+        direction,
+        selectedRoute: this.state.selectedData.lineStrings[directionNumber],
+        allRoutes: this.filterDataByDirection(this.state.allData, direction),
+      }
     });
+    this.search(this.state.searchTerm);
   }
 
-  search(searchTerm, allRoutes) {
-    const filteredRoutes = [];
-    allRoutes.forEach((el, index) => {
-      if (el.name.toLowerCase().includes(searchTerm.toLowerCase())) {
-        filteredRoutes.push(el);
-      }
-      else if (el
-                 .routeSections[0]
-                 .name.toLowerCase()
-                 .includes(searchTerm.toLowerCase())) {
-        filteredRoutes.push(el);
-      }
+  search(searchTerm) {
+    this.setState((state) => {
+      const filteredRoutes = [];
+      const allRoutes = state.allRoutes;
+      allRoutes.forEach((el) => {
+        if (el.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+          filteredRoutes.push(el);
+        }
+        else if (el
+                   .routeSections[0]
+                   .name.toLowerCase()
+                   .includes(searchTerm.toLowerCase())) {
+          filteredRoutes.push(el);
+        }
+      });
+      return { filteredRoutes }
     });
-    return filteredRoutes;
   }
 
   render() {
@@ -129,12 +134,15 @@ export default class App extends React.Component {
           }}>
           change direction, current: {this.state.direction}
         </button>
-        <SearchBar results={this.state.filteredRoutes.length} search={term => {
-          this.setState({
-            filteredRoutes: this.search(term, this.state.allRoutes),
-            searchTerm: term
-          });
-        }} />
+        <SearchBar
+          results={this.state.filteredRoutes.length}
+          search={(term) => {
+            this.setState(() => {
+              return {searchTerm: term}
+            });
+            this.search(term);
+          }}
+        />
         <BusList data={this.state.filteredRoutes} onBusClick={id => this.setBusRouteById(id)}/>
       </div>
     );
