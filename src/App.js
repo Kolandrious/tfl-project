@@ -31,7 +31,7 @@ export default class App extends React.Component {
     this.filterDataByDirection = this.filterDataByDirection.bind(this);
     this.search = this.search.bind(this);
     this.getAllBusRoutes();
-    this.setBusRouteById('2');
+    this.setBusRouteById('1');
   }
 
   getAllBusRoutes() {
@@ -81,9 +81,12 @@ export default class App extends React.Component {
         return newData;
       }],
     }).then(data => {
-      const route = this.state.direction === 'inbound' ?
-                   data.data.lineStrings[0] :
-                   data.data.lineStrings[1];
+      let route = data.data.lineStrings[0]
+      if (data.data.lineStrings.length > 1) {
+        route = this.state.direction === 'inbound' ?
+                     data.data.lineStrings[0] :
+                     data.data.lineStrings[1];
+      }
       this.setState({
         selectedData: data.data,
         selectedRoute: route
