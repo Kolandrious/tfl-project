@@ -15,7 +15,7 @@ export default props => (
       <tbody>
         {props.data.map(el => (
           <BusData
-            key={el.id}
+            key={el.counter}
             onBusClick={props.onBusClick}
             bus={el}
           />

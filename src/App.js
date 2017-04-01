@@ -29,86 +29,81 @@ export default class App extends React.Component {
       allData: {},
       allRoutes: [],
       filteredRoutes: [],
-      selectedData: {},
-      selectedRoute: [],
-      direction: 'inbound',
+      selected: [],
       searchTerm: '',
     };
-    this.setBusRouteById = this.setBusRouteById.bind(this);
-    this.changeDirection = this.changeDirection.bind(this);
+    this.setBusRoute = this.setBusRoute.bind(this);
     this.getAllBusRoutes = this.getAllBusRoutes.bind(this);
     this.search = this.search.bind(this);
     this.getAllBusRoutes();
-    this.setBusRouteById('1');
   }
 
   getAllBusRoutes() {
     axios({
       method: 'get',
-      url: 'https://api.tfl.gov.uk/Line/Mode/bus/Route?serviceTypes=Regular',
+      url: 'https://api.tfl.gov.uk/Line/Mode/bus/Route?serviceTypes=Regular&excludeCrowding=true',
       responseType: 'json',
     }).then(data => {
-      this.setState({
-        allRoutes: App.filterDataByDirection(data.data, this.state.direction),
-        allData: data.data,
-        filteredRoutes: App.filterDataByDirection(data.data, this.state.direction),
+      const expanded = [];
+      let counter = 1;
+      data.data.forEach(bus => {
+        bus.routeSections.forEach(route => {
+          const newRoute = route;
+          newRoute.name = bus.name;
+          newRoute.id = `${bus.id}`;
+          newRoute.counter = `${counter}`;
+          counter += 1;
+          expanded.push(newRoute);
+        });
       });
+      this.setState(() => ({
+        allRoutes: expanded,
+        allData: data.data,
+        filteredRoutes: expanded,
+      }));
+      this.setBusRoute(expanded[865]);
     });
   }
 
-  setBusRouteById(id) {
+  setBusRoute(bus) {
     axios({
       method: 'get',
-      url: `https://api-radon.tfl.gov.uk/Line/${id}/Route/Sequence/all?serviceTypes=Regular&excludeCrowding=true`,
+      url: `https://api-radon.tfl.gov.uk/Line/${bus.id}/Route/Sequence/${bus.direction
+      }?serviceTypes=Regular&excludeCrowding=true`,
       responseType: 'json',
       transformResponse: [data => {
-        data.lineStrings = data.lineStrings.map(el => (JSON.parse(el)[0]));
+        data.lineStrings = data.lineStrings.map(linestring => (JSON.parse(linestring)));
+        if (data.lineStrings.length > 1) {
+          const concatenatedName = `${bus.originationName} &harr;  ${bus.destinationName}`;
+          data.orderedLineRoutes.forEach((el, index) => {
+            if (el.name === concatenatedName) {
+              data.lineStrings = data.lineStrings[0][index];
+            }
+          });
+        } else {
+          data.lineStrings=data.lineStrings[0][0];
+        }
         return data;
       }],
     }).then(data => {
-      let route = data.data.lineStrings[0];
-      if (data.data.lineStrings.length > 1) {
-        route = (this.state.direction === 'inbound' ? data.data.lineStrings[0]
-                                                    : data.data.lineStrings[1]);
-      }
-      this.setState({
-        selectedData: data.data,
-        selectedRoute: route,
-      });
+      this.setState(() => ({
+        selected: data.data,
+      }));
     });
-  }
-
-
-  changeDirection() {
-    this.setState(state => {
-      const direction = state.direction === 'inbound' ? 'outbound' : 'inbound';
-      const directionNumber = state.direction === 'inbound' ? 1 : 0;
-      return {
-        direction,
-        selectedRoute: this.state.selectedData.lineStrings[directionNumber],
-        allRoutes: App.filterDataByDirection(this.state.allData, direction),
-      };
-    });
-    this.search(this.state.searchTerm);
   }
 
   search(searchTerm) {
-    this.setState(state => ({ filteredRoutes: state.allRoutes.filter(el =>
-      el.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      el.routeSections[0].name.toLowerCase().includes(searchTerm.toLowerCase()),
+    this.setState(state => ({ filteredRoutes: state.allRoutes.filter(route =>
+        route.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        route.originationName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        route.destinationName.toLowerCase().includes(searchTerm.toLowerCase()),
     ) }));
   }
 
   render() {
     return (
       <div className="container-fluid">
-        <BusMap path={this.state.selectedRoute} />
-        <button
-          className="btn btn-block"
-          onClick={() => this.changeDirection()}
-        >
-          change direction, current: {this.state.direction}
-        </button>
+        <BusMap path={this.state.selected.lineStrings} />
         <SearchBar
           results={this.state.filteredRoutes.length}
           search={term => {
@@ -116,7 +111,7 @@ export default class App extends React.Component {
             this.search(term);
           }}
         />
-        <BusList data={this.state.filteredRoutes} onBusClick={id => this.setBusRouteById(id)} />
+        <BusList data={this.state.filteredRoutes} onBusClick={bus => this.setBusRoute(bus)} />
       </div>
     );
   }
