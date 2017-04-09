@@ -68,8 +68,8 @@ export default class App extends React.Component {
   setBusRoute(bus) {
     axios({
       method: 'get',
-      url: `https://api-radon.tfl.gov.uk/Line/${bus.id}/Route/Sequence/${bus.direction
-      }?serviceTypes=Regular&excludeCrowding=true`,
+      url: `https://api-radon.tfl.gov.uk/Line/${bus.id}/Route/Sequence/${bus.direction}
+      ?serviceTypes=Regular&excludeCrowding=true`,
       responseType: 'json',
       transformResponse: [data => {
         data.lineStrings = data.lineStrings.map(linestring => (JSON.parse(linestring)));
